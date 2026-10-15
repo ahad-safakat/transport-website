@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none" role="img" aria-label="Company mark">
+  <rect width="40" height="40" rx="8" fill="#0B1220"/>
+  <path d="M8 27h16l5-8h5v8h-2.5" stroke="#F28C28" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="14" cy="29.5" r="2.2" stroke="#F4F6F8" stroke-width="1.6"/>
+  <circle cx="28" cy="29.5" r="2.2" stroke="#F4F6F8" stroke-width="1.6"/>
+  <path d="M9 14h12" stroke="#F4F6F8" stroke-width="1.8" stroke-linecap="round"/>
+</svg>

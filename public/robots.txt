@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Replace the sitemap origin after the production domain is confirmed.
+Sitemap: /sitemap.xml
