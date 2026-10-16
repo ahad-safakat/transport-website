@@ -1,45 +1,28 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
-import { emptyQuote, type QuotePayload } from '../lib/quoteValidation'
-
-type QuotePrefill = Partial<QuotePayload>
-
-type QuotePrefillContextValue = {
-  prefill: QuotePrefill
-  applyPrefill: (values: QuotePrefill) => void
-  consumePrefill: () => QuotePrefill
-}
-
-const QuotePrefillContext = createContext<QuotePrefillContextValue | null>(null)
+import { useCallback, useMemo, useState, type ReactNode } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { QuotePrefillContext, scrollToSection, type QuotePrefill } from './quotePrefill'
 
 export function QuotePrefillProvider({ children }: { children: ReactNode }) {
-  const [prefill, setPrefill] = useState<QuotePrefill>({})
+  const [prefill, setPrefill] = useState<{ values: QuotePrefill; version: number }>({ values: {}, version: 0 })
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
 
-  const applyPrefill = useCallback((values: QuotePrefill) => {
-    setPrefill(values)
-  }, [])
-
-  const consumePrefill = useCallback(() => {
-    const current = prefill
-    setPrefill({})
-    return current
-  }, [prefill])
-
-  const value = useMemo(
-    () => ({ prefill, applyPrefill, consumePrefill }),
-    [prefill, applyPrefill, consumePrefill],
+  const requestQuote = useCallback(
+    (values: QuotePrefill = {}) => {
+      setPrefill((current) => ({ values, version: current.version + 1 }))
+      if (pathname !== '/') {
+        navigate('/#quote')
+        return
+      }
+      if (window.location.hash !== '#quote') {
+        window.history.replaceState(null, '', '/#quote')
+      }
+      requestAnimationFrame(() => scrollToSection('quote'))
+    },
+    [navigate, pathname],
   )
 
+  const value = useMemo(() => ({ prefill, requestQuote }), [prefill, requestQuote])
+
   return <QuotePrefillContext.Provider value={value}>{children}</QuotePrefillContext.Provider>
-}
-
-export function useQuotePrefill() {
-  const context = useContext(QuotePrefillContext)
-  if (!context) {
-    throw new Error('useQuotePrefill must be used within QuotePrefillProvider')
-  }
-  return context
-}
-
-export function mergeQuote(base: QuotePayload, patch: QuotePrefill): QuotePayload {
-  return { ...emptyQuote(), ...base, ...patch, startedAt: base.startedAt || Date.now() }
 }

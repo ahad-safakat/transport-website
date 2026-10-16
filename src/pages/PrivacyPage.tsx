@@ -1,36 +1,65 @@
 import { displayName } from '../config/company'
+import { LegalLayout } from '../components/layout/LegalLayout'
 import { Seo } from '../components/seo/Seo'
 
 export function PrivacyPage() {
   return (
-    <article className="container-site section-pad max-w-3xl pt-28">
+    <>
       <Seo
         title={`Privacy Policy | ${displayName()}`}
-        description="How this transportation website handles enquiry information."
+        description="How this transportation website collects, uses, and shares enquiry information."
         path="/privacy"
       />
-      <p className="eyebrow">Legal</p>
-      <h1 className="display-title mt-3 text-4xl">Privacy Policy</h1>
-      <p className="mt-4 text-sm text-slate">Starter copy for legal review before launch. Not a compliance certification.</p>
-      <div className="mt-8 space-y-5 text-sm leading-7 text-slate">
-        <p>
-          This website collects information that you choose to submit through the quotation and contact forms:
-          name, optional company name, mobile number, optional email address, pickup and delivery details, cargo
-          description, and related transportation requirements.
-        </p>
-        <p>
-          That information is used only to respond to your enquiry. If email delivery is configured, the message is
-          sent through the email provider named in the server environment (for example, Resend) to the company’s
-          notification inbox. If you continue on WhatsApp, the details you reviewed are shared with WhatsApp because
-          you opened the click-to-chat link.
-        </p>
-        <p>
-          We do not sell personal information. We do not collect driver records or expose internal fleet systems on
-          this public website. You may ask for enquiry records to be deleted by contacting the published email or
-          telephone number once those details are configured.
-        </p>
-        <p>Replace this page with counsel-approved language before public launch.</p>
-      </div>
-    </article>
+      <LegalLayout title="Privacy Policy">
+        <section>
+          <h2>Information we collect</h2>
+          <p>We only collect information you choose to submit through the quotation form, general enquiry form, or website assistant:</p>
+          <ul>
+            <li>Name, mobile number, and optional company name and email address.</li>
+            <li>Pickup and delivery locations, preferred pickup date, vehicle type, cargo description, and approximate weight.</li>
+            <li>Any additional requirements or message you write.</li>
+          </ul>
+          <p>
+            The website assistant runs in your browser. Chat messages are not stored by us unless you copy them into a form and
+            submit it.
+          </p>
+        </section>
+        <section>
+          <h2>How we use it</h2>
+          <p>
+            Enquiry details are used only to review your transportation request, contact you about it, and prepare a quotation.
+            We do not sell personal information or use it for unrelated marketing.
+          </p>
+        </section>
+        <section>
+          <h2>Who receives it</h2>
+          <ul>
+            <li>
+              <strong className="text-navy">Email delivery provider</strong> — form submissions are sent through our configured
+              email service (for example, Resend) to the company’s enquiry inbox.
+            </li>
+            <li>
+              <strong className="text-navy">WhatsApp</strong> — only if you choose to open a WhatsApp chat. The prefilled message is
+              shared with WhatsApp (Meta) when you send it.
+            </li>
+            <li>
+              <strong className="text-navy">Website hosting provider</strong> — standard technical logs such as IP address may be
+              processed to deliver the website and prevent abuse.
+            </li>
+          </ul>
+        </section>
+        <section>
+          <h2>Retention and your choices</h2>
+          <p>
+            Enquiry records are kept only as long as needed to respond and for reasonable business records. You may ask us to
+            access, correct, or delete the details you submitted by contacting us using the published contact details.
+          </p>
+        </section>
+        <section>
+          <h2>Driver and operational data</h2>
+          <p>This public website does not display or collect driver records, internal vehicle availability, or operational data.</p>
+        </section>
+      </LegalLayout>
+    </>
   )
 }

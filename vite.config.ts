@@ -2,12 +2,14 @@ import { defineConfig, loadEnv, type Plugin } from 'vite'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { processChat } from './server/chatHandler.ts'
 import { processQuoteSubmission, readJsonBody } from './server/quoteHandler.ts'
 
 function quoteApiPlugin(env: Record<string, string>): Plugin {
   async function handler(req: IncomingMessage, res: ServerResponse, next: () => void) {
     const url = req.url ?? ''
-    if (!url.startsWith('/api/quote')) {
+    const isChat = url.startsWith('/api/chat')
+    if (!url.startsWith('/api/quote') && !isChat) {
       next()
       return
     }
@@ -29,7 +31,7 @@ function quoteApiPlugin(env: Record<string, string>): Plugin {
         (typeof forwarded === 'string' ? forwarded.split(',')[0] : '') ||
         req.socket.remoteAddress ||
         'unknown'
-      const result = await processQuoteSubmission(raw, { ip, env })
+      const result = isChat ? await processChat(raw, { ip, env }) : await processQuoteSubmission(raw, { ip, env })
       res.statusCode = result.status
       res.setHeader('Content-Type', 'application/json')
       res.end(JSON.stringify(result.body))
@@ -42,7 +44,7 @@ function quoteApiPlugin(env: Record<string, string>): Plugin {
   }
 
   return {
-    name: 'quote-api',
+    name: 'site-api',
     configureServer(server) {
       server.middlewares.use(handler)
     },

@@ -3,6 +3,8 @@ import { Contact } from '../components/sections/Contact'
 import { Coverage } from '../components/sections/Coverage'
 import { Hero } from '../components/sections/Hero'
 import { HowItWorks } from '../components/sections/HowItWorks'
+import { Industries } from '../components/sections/Industries'
+import { Partner } from '../components/sections/Partner'
 import { QuoteForm } from '../components/sections/QuoteForm'
 import { Services } from '../components/sections/Services'
 import { WhyChooseUs } from '../components/sections/WhyChooseUs'
@@ -15,10 +17,12 @@ export function HomePage() {
       <Hero />
       <About />
       <Services />
+      <Industries />
       <WhyChooseUs />
       <HowItWorks />
       <Coverage />
       <QuoteForm />
+      <Partner />
       <Contact />
     </>
   )

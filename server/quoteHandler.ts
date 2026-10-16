@@ -1,5 +1,13 @@
 import { enabledServices, vehicleTypes } from '../src/config/company.ts'
-import { isValidMobile, validateQuote, type QuotePayload } from '../src/lib/quoteValidation.ts'
+import {
+  partnerTypes,
+  validateContact,
+  validatePartner,
+  validateQuote,
+  type ContactPayload,
+  type PartnerPayload,
+  type QuotePayload,
+} from '../src/lib/quoteValidation.ts'
 
 type JsonRecord = Record<string, unknown>
 
@@ -12,8 +20,14 @@ const rateWindowMs = 10 * 60 * 1000
 const rateLimit = 6
 const hits = new Map<string, number[]>()
 
+/** In-memory, per-instance limit. On serverless hosts each instance keeps its own window. */
 function rateLimited(ip: string): boolean {
   const now = Date.now()
+  if (hits.size > 5000) {
+    for (const [key, times] of hits) {
+      if (times.every((time) => now - time >= rateWindowMs)) hits.delete(key)
+    }
+  }
   const recent = (hits.get(ip) ?? []).filter((time) => now - time < rateWindowMs)
   recent.push(now)
   hits.set(ip, recent)
@@ -29,6 +43,8 @@ function asNumber(value: unknown): number {
 }
 
 function sanitize(value: string, max = 500): string {
+  // Strip control characters (keeping tab/newline) from user input before it is emailed.
+  // oxlint-disable-next-line no-control-regex
   return value.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '').trim().slice(0, max)
 }
 
@@ -55,7 +71,9 @@ function parseQuote(raw: JsonRecord): QuotePayload {
   }
 }
 
-async function sendEmail(subject: string, text: string, env: Record<string, string | undefined>) {
+const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+async function sendEmail(subject: string, text: string, env: Record<string, string | undefined>, replyTo?: string) {
   const apiKey = env.RESEND_API_KEY
   const to = env.QUOTE_NOTIFICATION_EMAIL
   const from = env.QUOTE_FROM_EMAIL || 'Website Enquiries <onboarding@resend.dev>'
@@ -64,14 +82,27 @@ async function sendEmail(subject: string, text: string, env: Record<string, stri
     return { ok: false as const, code: 'EMAIL_NOT_CONFIGURED' }
   }
 
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ from, to, subject, text }),
-  })
+  let response: Response
+  try {
+    response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from,
+        to: to.split(',').map((address) => address.trim()).filter(Boolean),
+        subject: subject.replace(/[\r\n]+/g, ' '),
+        text,
+        ...(replyTo && emailPattern.test(replyTo) ? { reply_to: replyTo } : {}),
+      }),
+      signal: AbortSignal.timeout(10_000),
+    })
+  } catch (error) {
+    console.error('Resend request failed', error)
+    return { ok: false as const, code: 'EMAIL_PROVIDER_ERROR' }
+  }
 
   if (!response.ok) {
     const detail = await response.text()
@@ -118,22 +149,80 @@ export async function processQuoteSubmission(
   const record = raw as JsonRecord
   const kind = asString(record.kind) || 'quote'
 
-  if (kind === 'contact') {
-    const name = sanitize(asString(record.fullName), 120)
-    const mobile = sanitize(asString(record.mobile), 20)
-    const email = sanitize(asString(record.email), 160)
-    const message = sanitize(asString(record.cargoDescription), 1000)
-    const website = asString(record.website)
-    if (website.trim()) {
+  if (kind === 'partner') {
+    const partner: PartnerPayload = {
+      fullName: sanitize(asString(record.fullName), 120),
+      mobile: sanitize(asString(record.mobile), 20),
+      partnerType: sanitize(asString(record.partnerType), 40),
+      vehicleType: sanitize(asString(record.vehicleType), 40),
+      vehicleCount: sanitize(asString(record.vehicleCount), 6),
+      baseCity: sanitize(asString(record.baseCity), 80),
+      routes: sanitize(asString(record.routes), 500),
+      website: asString(record.website),
+      startedAt: asNumber(record.startedAt),
+    }
+    if (partner.website.trim()) {
       return { status: 200, body: { ok: true } }
     }
-    if (!name || !isValidMobile(mobile) || !message) {
-      return { status: 400, body: { ok: false, error: 'Name, a valid mobile number, and a message are required.' } }
+    const partnerErrors = validatePartner(partner, { server: true })
+    if (Object.keys(partnerErrors).length > 0) {
+      return { status: 400, body: { ok: false, error: 'Please correct the highlighted fields.', errors: partnerErrors } }
+    }
+    const typeLabel = partnerTypes.find((type) => type.id === partner.partnerType)?.label ?? partner.partnerType
+    const vehicleLabel = vehicleTypes.find((type) => type.id === partner.vehicleType)?.label ?? '—'
+    const sent = await sendEmail(
+      `Partner enquiry: ${typeLabel} — ${partner.fullName} (${partner.baseCity})`,
+      [
+        'New vehicle owner / agent partnership enquiry',
+        '',
+        `Name: ${partner.fullName}`,
+        `Mobile: ${partner.mobile}`,
+        `Partner type: ${typeLabel}`,
+        `Vehicle type: ${vehicleLabel}`,
+        `Number of vehicles: ${partner.vehicleCount || '—'}`,
+        `Base city: ${partner.baseCity}`,
+        `Usual routes: ${partner.routes || '—'}`,
+      ].join('\n'),
+      meta.env,
+    )
+    if (!sent.ok) {
+      return {
+        status: 503,
+        body: {
+          ok: false,
+          code: sent.code,
+          error:
+            sent.code === 'EMAIL_NOT_CONFIGURED'
+              ? 'Email delivery is not configured yet. Please call or WhatsApp us instead.'
+              : 'The email provider could not accept this enquiry. Please call or WhatsApp us instead.',
+        },
+      }
+    }
+    return { status: 200, body: { ok: true } }
+  }
+
+  if (kind === 'contact') {
+    const contact: ContactPayload = {
+      fullName: sanitize(asString(record.fullName), 120),
+      mobile: sanitize(asString(record.mobile), 20),
+      email: sanitize(asString(record.email), 160),
+      message: sanitize(asString(record.message), 1000),
+      website: asString(record.website),
+      startedAt: asNumber(record.startedAt),
+    }
+    // Honeypot filled: accept silently so bots get no signal, but send nothing.
+    if (contact.website.trim()) {
+      return { status: 200, body: { ok: true } }
+    }
+    const contactErrors = validateContact(contact, { server: true })
+    if (Object.keys(contactErrors).length > 0) {
+      return { status: 400, body: { ok: false, error: 'Please correct the highlighted fields.', errors: contactErrors } }
     }
     const sent = await sendEmail(
-      `Website contact from ${name}`,
-      `Name: ${name}\nMobile: ${mobile}\nEmail: ${email || '—'}\n\n${message}`,
+      `Website contact from ${contact.fullName}`,
+      `Name: ${contact.fullName}\nMobile: ${contact.mobile}\nEmail: ${contact.email || '—'}\n\n${contact.message}`,
       meta.env,
+      contact.email,
     )
     if (!sent.ok) {
       return {
@@ -161,7 +250,12 @@ export async function processQuoteSubmission(
     return { status: 400, body: { ok: false, error: 'Please correct the highlighted fields.', errors } }
   }
 
-  const sent = await sendEmail(`Transportation enquiry from ${payload.fullName}`, quoteEmail(payload), meta.env)
+  const sent = await sendEmail(
+    `Transportation enquiry: ${payload.pickupCity} → ${payload.deliveryCity} (${payload.fullName})`,
+    quoteEmail(payload),
+    meta.env,
+    payload.email,
+  )
   if (!sent.ok) {
     return {
       status: 503,
@@ -181,8 +275,12 @@ export async function processQuoteSubmission(
 
 export async function readJsonBody(req: { [Symbol.asyncIterator](): AsyncIterator<Buffer | string> }): Promise<unknown> {
   const chunks: Buffer[] = []
+  let size = 0
   for await (const chunk of req) {
-    chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk)
+    const buffer = typeof chunk === 'string' ? Buffer.from(chunk) : chunk
+    size += buffer.length
+    if (size > 32 * 1024) throw new Error('Request body too large')
+    chunks.push(buffer)
   }
   const text = Buffer.concat(chunks).toString('utf8')
   if (!text) return {}

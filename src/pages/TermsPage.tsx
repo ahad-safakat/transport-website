@@ -1,34 +1,48 @@
 import { displayName } from '../config/company'
+import { LegalLayout } from '../components/layout/LegalLayout'
 import { Seo } from '../components/seo/Seo'
 
 export function TermsPage() {
   return (
-    <article className="container-site section-pad max-w-3xl pt-28">
+    <>
       <Seo
         title={`Terms and Conditions | ${displayName()}`}
-        description="Website terms for transportation enquiries."
+        description="Website terms for transportation enquiries and quotations."
         path="/terms"
       />
-      <p className="eyebrow">Legal</p>
-      <h1 className="display-title mt-3 text-4xl">Terms and Conditions</h1>
-      <p className="mt-4 text-sm text-slate">Starter copy for legal review before launch. Not a compliance certification.</p>
-      <div className="mt-8 space-y-5 text-sm leading-7 text-slate">
-        <p>
-          This website is an information and enquiry channel for point-to-point transportation. Submitting a form,
-          chatting with the website assistant, or sending a WhatsApp message is a request for a quotation. It does
-          not create a carriage contract, reserve a vehicle, or confirm price, schedule, or availability.
-        </p>
-        <p>
-          Transportation proceeds only after the company and the customer confirm the vehicle, route, cargo, timing,
-          and commercial terms in a separate agreement or written confirmation.
-        </p>
-        <p>
-          Website content must not be read as a claim about fleet size, certifications, insurance, licences, or
-          coverage that has not been independently confirmed. The automated assistant is not a human agent and cannot
-          bind the company.
-        </p>
-        <p>Replace this page with counsel-approved language before public launch. {displayName()}.</p>
-      </div>
-    </article>
+      <LegalLayout title="Terms and Conditions">
+        <section>
+          <h2>Enquiries are not bookings</h2>
+          <p>
+            This website is an information and enquiry channel for point-to-point transportation. Submitting a form, chatting
+            with the website assistant, or sending a WhatsApp message is a request for a quotation. It does not create a
+            contract of carriage, reserve a vehicle, or confirm price, schedule, or availability.
+          </p>
+        </section>
+        <section>
+          <h2>Confirmation of transport</h2>
+          <p>
+            Transportation proceeds only after {displayName()} and the customer confirm the vehicle, route, cargo, timing, and
+            commercial terms in a separate written confirmation or agreement. Those confirmed terms govern the movement.
+          </p>
+        </section>
+        <section>
+          <h2>Accuracy of information</h2>
+          <p>
+            Customers are responsible for providing accurate pickup, delivery, and cargo details, including weight and any
+            handling requirements. Specialised, hazardous, refrigerated, or oversized cargo is accepted only when separately
+            confirmed in writing.
+          </p>
+        </section>
+        <section>
+          <h2>Website content</h2>
+          <p>
+            Website content is general information. It is not a claim about fleet size, certifications, insurance, licences, or
+            coverage beyond what is expressly confirmed. The automated assistant is not a human agent and cannot bind the
+            company.
+          </p>
+        </section>
+      </LegalLayout>
+    </>
   )
 }

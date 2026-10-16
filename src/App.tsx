@@ -5,6 +5,7 @@ import { Navbar } from './components/layout/Navbar'
 import { ChatWidget } from './components/widgets/ChatWidget'
 import { WhatsAppButton } from './components/widgets/WhatsAppButton'
 import { QuotePrefillProvider } from './context/QuotePrefillContext'
+import { scrollToSection } from './context/quotePrefill'
 import { HomePage } from './pages/HomePage'
 import { PrivacyPage } from './pages/PrivacyPage'
 import { TermsPage } from './pages/TermsPage'
@@ -13,10 +14,7 @@ function ScrollToHash() {
   const { hash, pathname } = useLocation()
   useEffect(() => {
     if (hash) {
-      const id = hash.replace('#', '')
-      requestAnimationFrame(() => {
-        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      })
+      requestAnimationFrame(() => scrollToSection(hash.slice(1)))
       return
     }
     window.scrollTo({ top: 0 })
@@ -30,7 +28,7 @@ export default function App() {
       <ScrollToHash />
       <div className="min-h-dvh bg-white">
         <Navbar />
-        <main>
+        <main id="main" tabIndex={-1} className="outline-none">
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/privacy" element={<PrivacyPage />} />

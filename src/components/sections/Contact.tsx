@@ -1,164 +1,233 @@
-import { useState, type FormEvent } from 'react'
-import { Mail, MapPin, MessageCircle, Phone } from 'lucide-react'
+import { useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { Loader2, Mail, MapPin, MessageCircle, Phone } from 'lucide-react'
 import {
+  allPhones,
   company,
   hasAddress,
   hasEmail,
+  hasGstin,
   hasPhone,
   hasSocial,
   hasWhatsApp,
-  isPlaceholder,
+  telHref,
 } from '../../config/company'
 import { contactCopy, privacyNotice, whatsappDefaultMessage } from '../../config/content'
-import { buildWhatsAppUrl } from '../../lib/whatsapp'
+import { validateContact, type ContactErrors, type ContactPayload } from '../../lib/quoteValidation'
+import { fieldClass } from '../../lib/formStyles'
+import { buildWhatsAppUrl, openWhatsApp } from '../../lib/whatsapp'
 import { Button } from '../ui/Button'
+import { Field } from '../ui/Field'
+import { Reveal } from '../ui/Reveal'
 import { SectionHeading } from '../ui/SectionHeading'
+import { InstagramIcon, LinkedInIcon } from '../ui/SocialIcons'
+
+type Status = { state: 'idle' } | { state: 'submitting' } | { state: 'success' } | { state: 'error'; message: string }
+
+const emptyContact = (): ContactPayload => ({ fullName: '', mobile: '', email: '', message: '', website: '', startedAt: Date.now() })
 
 export function Contact() {
-  const whatsapp = hasWhatsApp() ? buildWhatsAppUrl(whatsappDefaultMessage) : null
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [message, setMessage] = useState('')
-  const [honeypot, setHoneypot] = useState('')
-  const [status, setStatus] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
-  const [error, setError] = useState('')
+  const whatsapp = buildWhatsAppUrl(whatsappDefaultMessage)
+  const [values, setValues] = useState<ContactPayload>(emptyContact)
+  const [errors, setErrors] = useState<ContactErrors>({})
+  const [status, setStatus] = useState<Status>({ state: 'idle' })
+  const formRef = useRef<HTMLFormElement>(null)
+  const inFlight = useRef(false)
+
+  function update<K extends keyof ContactPayload>(key: K, value: ContactPayload[K]) {
+    setValues((current) => ({ ...current, [key]: value }))
+    setErrors((current) => (current[key] ? { ...current, [key]: undefined } : current))
+  }
 
   async function onSubmit(event: FormEvent) {
     event.preventDefault()
-    if (status === 'submitting') return
-    if (!name.trim() || !phone.trim() || !message.trim()) {
-      setError('Name, mobile number, and message are required.')
-      setStatus('error')
+    if (inFlight.current) return
+    const nextErrors = validateContact(values)
+    setErrors(nextErrors)
+    const first = (['fullName', 'mobile', 'email', 'message'] as const).find((key) => nextErrors[key])
+    if (first) {
+      formRef.current?.querySelector<HTMLElement>(`[name="${first}"]`)?.focus()
       return
     }
-    setStatus('submitting')
-    setError('')
+
+    inFlight.current = true
+    setStatus({ state: 'submitting' })
     try {
       const response = await fetch('/api/quote', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          kind: 'contact',
-          fullName: name,
-          email,
-          mobile: phone,
-          cargoDescription: message,
-          website: honeypot,
-          startedAt: Date.now() - 3000,
-        }),
+        body: JSON.stringify({ kind: 'contact', ...values }),
       })
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string }
+      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; errors?: ContactErrors }
       if (!response.ok || !data.ok) {
-        setStatus('error')
-        setError(data.error || 'The message could not be delivered. Please use phone or WhatsApp.')
+        if (data.errors) setErrors(data.errors)
+        setStatus({
+          state: 'error',
+          message: data.errors?.startedAt ?? data.error ?? 'The message could not be delivered. Please use phone or WhatsApp.',
+        })
         return
       }
-      setStatus('success')
+      setStatus({ state: 'success' })
+      setValues(emptyContact())
     } catch {
-      setStatus('error')
-      setError('The message could not be delivered. Please use phone or WhatsApp.')
+      setStatus({ state: 'error', message: 'The message could not be delivered. Check your connection, or use phone or WhatsApp.' })
+    } finally {
+      inFlight.current = false
     }
   }
 
+  const fieldProps = <K extends keyof ContactPayload>(key: K) => ({
+    id: `contact-${key}`,
+    name: key,
+    value: values[key] as string,
+    'aria-invalid': errors[key] ? true : undefined,
+    'aria-describedby': errors[key] ? `contact-${key}-error` : undefined,
+    className: fieldClass,
+  })
+
+  const hasAnyDirect = hasPhone() || hasEmail() || hasAddress() || Boolean(whatsapp)
+
   return (
     <section id="contact" className="section-pad bg-white">
-      <div className="container-site grid gap-12 lg:grid-cols-2">
-        <div>
+      <div className="container-site grid gap-14 lg:grid-cols-2 lg:gap-20">
+        <Reveal>
           <SectionHeading eyebrow="Contact" title={contactCopy.heading} intro={contactCopy.supporting} />
-          <ul className="mt-10 space-y-5">
+          <ul className="mt-10 divide-y divide-navy/10 border-y border-navy/10">
             {hasPhone() ? (
-              <li className="flex gap-3 text-sm">
-                <Phone size={18} className="mt-0.5 text-accent" />
-                <a href={`tel:${company.phone.replace(/\s/g, '')}`} className="font-semibold">
-                  {company.phone}
-                </a>
-              </li>
+              <ContactRow icon={<Phone size={18} />} label="Telephone">
+                <span className="grid gap-x-6 gap-y-1 sm:grid-cols-2">
+                  {allPhones().map((phone) => (
+                    <a key={phone} href={telHref(phone)} className="hover:text-accent-ink">
+                      {phone}
+                    </a>
+                  ))}
+                </span>
+              </ContactRow>
             ) : null}
             {whatsapp ? (
-              <li className="flex gap-3 text-sm">
-                <MessageCircle size={18} className="mt-0.5 text-accent" />
-                <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="font-semibold">
-                  Message on WhatsApp
+              <ContactRow icon={<MessageCircle size={18} />} label="WhatsApp">
+                <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="hover:text-accent-ink">
+                  Message us on WhatsApp
                 </a>
-              </li>
+              </ContactRow>
             ) : null}
             {hasEmail() ? (
-              <li className="flex gap-3 text-sm">
-                <Mail size={18} className="mt-0.5 text-accent" />
-                <a href={`mailto:${company.email}`} className="font-semibold">
+              <ContactRow icon={<Mail size={18} />} label="Email">
+                <a href={`mailto:${company.email}`} className="break-all hover:text-accent-ink">
                   {company.email}
                 </a>
-              </li>
+              </ContactRow>
             ) : null}
             {hasAddress() ? (
-              <li className="flex gap-3 text-sm">
-                <MapPin size={18} className="mt-0.5 text-accent" />
-                <span>
-                  {company.officeAddress}
-                  {!isPlaceholder(company.headquarters) ? (
-                    <span className="mt-1 block text-slate">{company.headquarters}</span>
-                  ) : null}
+              <ContactRow icon={<MapPin size={18} />} label="Office">
+                <span className="font-medium">
+                  <a href={company.mapsUrl} target="_blank" rel="noopener noreferrer" className="hover:text-accent-ink">
+                    {company.officeAddress}
+                  </a>
+                  {hasGstin() ? <span className="mt-1 block text-sm text-slate">GSTIN {company.gstin}</span> : null}
                 </span>
-              </li>
-            ) : (
-              <li className="text-sm text-slate">
-                Office address and direct contact numbers will appear here once they are configured.
-              </li>
-            )}
+              </ContactRow>
+            ) : null}
           </ul>
-          <div className="mt-8 flex gap-4 text-sm font-semibold">
-            {hasSocial(company.instagramUrl) ? (
-              <a href={company.instagramUrl} target="_blank" rel="noopener noreferrer">
-                Instagram
-              </a>
-            ) : null}
-            {hasSocial(company.linkedinUrl) ? (
-              <a href={company.linkedinUrl} target="_blank" rel="noopener noreferrer">
-                LinkedIn
-              </a>
-            ) : null}
-          </div>
-        </div>
-
-        <form onSubmit={onSubmit} className="border border-navy/10 p-5 md:p-8" noValidate>
-          <h3 className="text-lg font-bold">General enquiry</h3>
-          <input
-            className="honeypot"
-            tabIndex={-1}
-            autoComplete="off"
-            value={honeypot}
-            onChange={(event) => setHoneypot(event.target.value)}
-            aria-hidden="true"
-          />
-          <label className="mt-5 block text-xs font-bold tracking-[0.12em] uppercase">
-            Name
-            <input className="mt-1.5 w-full border border-navy/15 px-3 py-2.5 text-sm" value={name} onChange={(e) => setName(e.target.value)} required />
-          </label>
-          <label className="mt-4 block text-xs font-bold tracking-[0.12em] uppercase">
-            Mobile
-            <input className="mt-1.5 w-full border border-navy/15 px-3 py-2.5 text-sm" value={phone} onChange={(e) => setPhone(e.target.value)} required />
-          </label>
-          <label className="mt-4 block text-xs font-bold tracking-[0.12em] uppercase">
-            Email (optional)
-            <input className="mt-1.5 w-full border border-navy/15 px-3 py-2.5 text-sm" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          </label>
-          <label className="mt-4 block text-xs font-bold tracking-[0.12em] uppercase">
-            Message
-            <textarea className="mt-1.5 min-h-28 w-full border border-navy/15 px-3 py-2.5 text-sm" value={message} onChange={(e) => setMessage(e.target.value)} required />
-          </label>
-          <p className="mt-3 text-xs leading-5 text-slate">{privacyNotice}</p>
-          {status === 'success' ? (
-            <p className="mt-4 text-sm text-emerald-800">Message received. Our team will respond.</p>
+          {!hasAnyDirect ? (
+            <p className="mt-6 text-sm text-slate">Direct contact details will appear here once they are configured.</p>
           ) : null}
-          {status === 'error' ? <p className="mt-4 text-sm text-red-700">{error}</p> : null}
-          <div className="mt-5">
-            <Button type="submit" disabled={status === 'submitting' || status === 'success'}>
-              {status === 'submitting' ? 'Sending…' : 'Send message'}
-            </Button>
-          </div>
-        </form>
+          {hasSocial(company.instagramUrl) || hasSocial(company.linkedinUrl) ? (
+            <div className="mt-8 flex gap-3">
+              {hasSocial(company.linkedinUrl) ? (
+                <a href={company.linkedinUrl} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="flex h-11 w-11 items-center justify-center border border-navy/15 transition-colors hover:border-navy hover:bg-navy hover:text-white">
+                  <LinkedInIcon />
+                </a>
+              ) : null}
+              {hasSocial(company.instagramUrl) ? (
+                <a href={company.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="flex h-11 w-11 items-center justify-center border border-navy/15 transition-colors hover:border-navy hover:bg-navy hover:text-white">
+                  <InstagramIcon />
+                </a>
+              ) : null}
+            </div>
+          ) : null}
+        </Reveal>
+
+        <Reveal delay={0.1}>
+          <form ref={formRef} onSubmit={onSubmit} className="bg-cream p-6 md:p-9" noValidate aria-busy={status.state === 'submitting'}>
+            <h3 className="text-xl font-extrabold tracking-tight">General enquiry</h3>
+            <p className="mt-1.5 text-sm text-slate">For transport quotations, the quote form above gets you a faster response.</p>
+            <div className="honeypot" aria-hidden="true">
+              <label>
+                Website
+                <input tabIndex={-1} autoComplete="off" name="website" value={values.website} onChange={(e) => update('website', e.target.value)} />
+              </label>
+            </div>
+            <div className="mt-6 grid gap-5 sm:grid-cols-2">
+              <Field id="contact-fullName" label="Name" error={errors.fullName} required>
+                <input {...fieldProps('fullName')} required autoComplete="name" maxLength={120} onChange={(e) => update('fullName', e.target.value)} />
+              </Field>
+              <Field id="contact-mobile" label="Mobile" error={errors.mobile} required>
+                <input {...fieldProps('mobile')} required type="tel" inputMode="tel" autoComplete="tel" maxLength={16} onChange={(e) => update('mobile', e.target.value)} />
+              </Field>
+              <Field id="contact-email" label="Email" error={errors.email} optional wide>
+                <input {...fieldProps('email')} type="email" autoComplete="email" maxLength={160} onChange={(e) => update('email', e.target.value)} />
+              </Field>
+              <Field id="contact-message" label="Message" error={errors.message} required wide>
+                <textarea {...fieldProps('message')} required className={`${fieldClass} min-h-32 resize-y`} maxLength={1000} onChange={(e) => update('message', e.target.value)} />
+              </Field>
+            </div>
+            <p className="mt-4 text-xs leading-5 text-slate">{privacyNotice}</p>
+            <div aria-live="polite" className="mt-4">
+              {status.state === 'success' ? (
+                <p className="border border-emerald-700/20 bg-emerald-50 px-4 py-3 text-sm text-emerald-900" role="status">
+                  Message received. Our team will respond using the details you provided.
+                </p>
+              ) : null}
+              {status.state === 'error' ? (
+                <p className="border border-red-700/20 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert">
+                  {status.message}
+                </p>
+              ) : null}
+            </div>
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+              <Button type="submit" disabled={status.state === 'submitting'}>
+                {status.state === 'submitting' ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+                    Sending…
+                  </>
+                ) : (
+                  'Send message'
+                )}
+              </Button>
+              {status.state === 'error' && hasWhatsApp() ? (
+                <Button
+                  variant="whatsapp"
+                  onClick={() =>
+                    openWhatsApp(
+                      ['Hello, I have an enquiry.', values.fullName ? `Name: ${values.fullName}` : null, values.message || null]
+                        .filter(Boolean)
+                        .join('\n'),
+                    )
+                  }
+                >
+                  <MessageCircle size={16} aria-hidden="true" />
+                  Continue on WhatsApp
+                </Button>
+              ) : null}
+            </div>
+          </form>
+        </Reveal>
       </div>
     </section>
+  )
+}
+
+function ContactRow({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
+  return (
+    <li className="flex items-start gap-4 py-5">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center bg-navy text-accent" aria-hidden="true">
+        {icon}
+      </span>
+      <div className="min-w-0 text-[15px] font-bold">
+        <p className="text-[11px] font-bold tracking-[0.16em] text-navy/50 uppercase">{label}</p>
+        <div className="mt-1">{children}</div>
+      </div>
+    </li>
   )
 }

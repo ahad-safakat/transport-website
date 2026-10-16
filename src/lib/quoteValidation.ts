@@ -57,7 +57,7 @@ export function isValidMobile(value: string): boolean {
   return false
 }
 
-function todayStamp(): string {
+export function todayStamp(): string {
   const now = new Date()
   const y = now.getFullYear()
   const m = String(now.getMonth() + 1).padStart(2, '0')
@@ -146,4 +146,67 @@ export function quoteToWhatsAppMessage(payload: QuotePayload): string {
   ]
     .filter(Boolean)
     .join('\n')
+}
+
+export type ContactPayload = {
+  fullName: string
+  mobile: string
+  email: string
+  message: string
+  website: string
+  startedAt: number
+}
+
+export type ContactErrors = Partial<Record<keyof ContactPayload, string>>
+
+export function validateContact(payload: ContactPayload, options?: { server?: boolean }): ContactErrors {
+  const errors: ContactErrors = {}
+  if (!payload.fullName.trim()) errors.fullName = 'Name is required.'
+  if (!isValidMobile(payload.mobile)) errors.mobile = 'Enter a valid 10-digit Indian mobile number.'
+  if (payload.email.trim() && !emailPattern.test(payload.email.trim())) {
+    errors.email = 'Enter a valid email address or leave this field blank.'
+  }
+  if (!payload.message.trim()) errors.message = 'Please enter a message.'
+  if (options?.server && (!payload.startedAt || Date.now() - payload.startedAt < 2000)) {
+    errors.startedAt = 'Please take a moment to review your message before sending.'
+  }
+  return errors
+}
+
+export const partnerTypes = [
+  { id: 'owner-operator', label: 'Truck owner / owner-operator' },
+  { id: 'fleet-owner', label: 'Fleet owner' },
+  { id: 'agent', label: 'Transport agent / broker' },
+] as const
+
+export type PartnerPayload = {
+  fullName: string
+  mobile: string
+  partnerType: string
+  vehicleType: string
+  vehicleCount: string
+  baseCity: string
+  routes: string
+  website: string
+  startedAt: number
+}
+
+export type PartnerErrors = Partial<Record<keyof PartnerPayload, string>>
+
+export function validatePartner(payload: PartnerPayload, options?: { server?: boolean }): PartnerErrors {
+  const errors: PartnerErrors = {}
+  if (!payload.fullName.trim()) errors.fullName = 'Name is required.'
+  if (!isValidMobile(payload.mobile)) errors.mobile = 'Enter a valid 10-digit Indian mobile number.'
+  if (!partnerTypes.some((type) => type.id === payload.partnerType)) errors.partnerType = 'Select how you would like to partner.'
+  if (payload.vehicleType && !vehicleTypes.some((type) => type.id === payload.vehicleType)) {
+    errors.vehicleType = 'Select a vehicle type.'
+  }
+  if (payload.vehicleCount.trim() && !/^\d{1,4}$/.test(payload.vehicleCount.trim())) {
+    errors.vehicleCount = 'Enter a number.'
+  }
+  if (!payload.baseCity.trim()) errors.baseCity = 'Base city is required.'
+  if (options?.server && (!payload.startedAt || Date.now() - payload.startedAt < 2000)) {
+    errors.startedAt = 'Please take a moment to review your details before sending.'
+  }
+  return errors
 }
