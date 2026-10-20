@@ -54,7 +54,7 @@ export const company = {
     postalCode: '575019',
   },
   /** Digits only with country code, no plus sign. Example: 9198XXXXXXXX */
-  whatsappNumber: '917090134162',
+  whatsappNumber: '919741519252',
   /** Primary display telephone, used for "Call" buttons. */
   phone: '+91 97415 19252',
   /** Every published number, shown in the contact section and footer. */

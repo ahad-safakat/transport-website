@@ -40,7 +40,7 @@ api/quote.ts             ← Vercel serverless function (POST /api/quote)
 | `gstin` | 29ELBPR2283E1ZX | Top bar, About facts, Contact, footer, structured data |
 | `officeAddress`, `postalAddress` | 1st Floor, City Neralu Building, NH 66, Hosabettu, Mangaluru 575019 | `postalAddress` feeds search-engine structured data |
 | `legalName` | placeholder | Hidden until set |
-| `whatsappNumber` | `917090134162` | Digits only, `91` + 10-digit number, no `+` or spaces |
+| `whatsappNumber` | `919741519252` | Digits only, `91` + 10-digit number, no `+` or spaces |
 | `phone`, `phones` | +91 97415 19252 (+3 more) | `phone` is used for Call buttons; `phones` lists all four card numbers |
 | `email` | `ahadsafakat@gmail.com` | **Not on the visiting card** — replace with the company’s business email before launch |
 | `instagramUrl`, `linkedinUrl` | empty | Hidden until set |
@@ -74,7 +74,7 @@ Server-side protections: validation of every field, control-character stripping,
 
 ## 3. WhatsApp
 
-Links use the official format `https://wa.me/917090134162?text=<URL-encoded message>`. WhatsApp never sends anything automatically — the visitor reviews the prefilled message in WhatsApp and presses send. If `whatsappNumber` is invalid or empty, all WhatsApp buttons are hidden.
+Links use the official format `https://wa.me/919741519252?text=<URL-encoded message>`. WhatsApp never sends anything automatically — the visitor reviews the prefilled message in WhatsApp and presses send. If `whatsappNumber` is invalid or empty, all WhatsApp buttons are hidden.
 
 ## 4. Deploy (Vercel, recommended)
 
