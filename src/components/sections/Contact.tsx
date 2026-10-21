@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { Loader2, Mail, MapPin, MessageCircle, Phone } from 'lucide-react'
+import { Mail, MapPin, MessageCircle, Phone } from 'lucide-react'
 import {
   allPhones,
   company,
@@ -11,7 +11,7 @@ import {
   hasWhatsApp,
   telHref,
 } from '../../config/company'
-import { contactCopy, privacyNotice, whatsappDefaultMessage } from '../../config/content'
+import { contactCopy, whatsappDefaultMessage } from '../../config/content'
 import { validateContact, type ContactErrors, type ContactPayload } from '../../lib/quoteValidation'
 import { fieldClass } from '../../lib/formStyles'
 import { buildWhatsAppUrl, openWhatsApp } from '../../lib/whatsapp'
@@ -21,7 +21,7 @@ import { Reveal } from '../ui/Reveal'
 import { SectionHeading } from '../ui/SectionHeading'
 import { InstagramIcon, LinkedInIcon } from '../ui/SocialIcons'
 
-type Status = { state: 'idle' } | { state: 'submitting' } | { state: 'success' } | { state: 'error'; message: string }
+type Status = { state: 'idle' } | { state: 'opened' } | { state: 'error'; message: string }
 
 const emptyContact = (): ContactPayload => ({ fullName: '', mobile: '', email: '', message: '', website: '', startedAt: Date.now() })
 
@@ -31,16 +31,14 @@ export function Contact() {
   const [errors, setErrors] = useState<ContactErrors>({})
   const [status, setStatus] = useState<Status>({ state: 'idle' })
   const formRef = useRef<HTMLFormElement>(null)
-  const inFlight = useRef(false)
 
   function update<K extends keyof ContactPayload>(key: K, value: ContactPayload[K]) {
     setValues((current) => ({ ...current, [key]: value }))
     setErrors((current) => (current[key] ? { ...current, [key]: undefined } : current))
   }
 
-  async function onSubmit(event: FormEvent) {
+  function onSubmit(event: FormEvent) {
     event.preventDefault()
-    if (inFlight.current) return
     const nextErrors = validateContact(values)
     setErrors(nextErrors)
     const first = (['fullName', 'mobile', 'email', 'message'] as const).find((key) => nextErrors[key])
@@ -49,29 +47,22 @@ export function Contact() {
       return
     }
 
-    inFlight.current = true
-    setStatus({ state: 'submitting' })
-    try {
-      const response = await fetch('/api/quote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ kind: 'contact', ...values }),
-      })
-      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string; errors?: ContactErrors }
-      if (!response.ok || !data.ok) {
-        if (data.errors) setErrors(data.errors)
-        setStatus({
-          state: 'error',
-          message: data.errors?.startedAt ?? data.error ?? 'The message could not be delivered. Please use phone or WhatsApp.',
-        })
-        return
-      }
-      setStatus({ state: 'success' })
+    const message = [
+      'Hello, I have an enquiry.',
+      `Name: ${values.fullName.trim()}`,
+      `Mobile: ${values.mobile.trim()}`,
+      values.email.trim() ? `Email: ${values.email.trim()}` : null,
+      '',
+      values.message.trim(),
+    ]
+      .filter((line) => line !== null)
+      .join('\n')
+
+    if (openWhatsApp(message)) {
+      setStatus({ state: 'opened' })
       setValues(emptyContact())
-    } catch {
-      setStatus({ state: 'error', message: 'The message could not be delivered. Check your connection, or use phone or WhatsApp.' })
-    } finally {
-      inFlight.current = false
+    } else {
+      setStatus({ state: 'error', message: 'WhatsApp is not available right now. Please call us on one of the numbers listed.' })
     }
   }
 
@@ -148,7 +139,7 @@ export function Contact() {
         </Reveal>
 
         <Reveal delay={0.1}>
-          <form ref={formRef} onSubmit={onSubmit} className="bg-cream p-6 md:p-9" noValidate aria-busy={status.state === 'submitting'}>
+          <form ref={formRef} onSubmit={onSubmit} className="bg-cream p-6 md:p-9" noValidate>
             <h3 className="text-xl font-extrabold tracking-tight">General enquiry</h3>
             <p className="mt-1.5 text-sm text-slate">For transport quotations, the quote form above gets you a faster response.</p>
             <div className="honeypot" aria-hidden="true">
@@ -171,11 +162,13 @@ export function Contact() {
                 <textarea {...fieldProps('message')} required className={`${fieldClass} min-h-32 resize-y`} maxLength={1000} onChange={(e) => update('message', e.target.value)} />
               </Field>
             </div>
-            <p className="mt-4 text-xs leading-5 text-slate">{privacyNotice}</p>
+            <p className="mt-4 text-xs leading-5 text-slate">
+              Your message opens in WhatsApp so you can send it to our team. Your details are used only to respond to your enquiry.
+            </p>
             <div aria-live="polite" className="mt-4">
-              {status.state === 'success' ? (
+              {status.state === 'opened' ? (
                 <p className="border border-emerald-700/20 bg-emerald-50 px-4 py-3 text-sm text-emerald-900" role="status">
-                  Message received. Our team will respond using the details you provided.
+                  WhatsApp has opened with your message. Tap send there to reach our team.
                 </p>
               ) : null}
               {status.state === 'error' ? (
@@ -185,31 +178,10 @@ export function Contact() {
               ) : null}
             </div>
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              <Button type="submit" disabled={status.state === 'submitting'}>
-                {status.state === 'submitting' ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-                    Sending…
-                  </>
-                ) : (
-                  'Send message'
-                )}
+              <Button type="submit" variant="whatsapp" disabled={!hasWhatsApp()}>
+                <MessageCircle size={16} aria-hidden="true" />
+                Send message on WhatsApp
               </Button>
-              {status.state === 'error' && hasWhatsApp() ? (
-                <Button
-                  variant="whatsapp"
-                  onClick={() =>
-                    openWhatsApp(
-                      ['Hello, I have an enquiry.', values.fullName ? `Name: ${values.fullName}` : null, values.message || null]
-                        .filter(Boolean)
-                        .join('\n'),
-                    )
-                  }
-                >
-                  <MessageCircle size={16} aria-hidden="true" />
-                  Continue on WhatsApp
-                </Button>
-              ) : null}
             </div>
           </form>
         </Reveal>
