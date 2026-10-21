@@ -65,20 +65,11 @@ describe('chatbot free text', () => {
 })
 
 describe('chatbot quote flow', () => {
-  it('collects details and transfers them to the form', () => {
+  it('collects details and offers only WhatsApp or start over', () => {
     const summary = run(['Get a Transportation Quote', 'Pune', 'Chennai', 'Heavy commercial / full truckload', 'Steel coils', '25/12/2099'])
     expect(summary.state.step).toBe('quote-summary')
     expect(summary.replies[0]).toMatch(/Pune[\s\S]*Chennai[\s\S]*Steel coils[\s\S]*25\/12\/2099/)
-
-    const transfer = handleChatInput(summary.state, 'Continue to Quote Form')
-    expect(transfer.transferToForm).toEqual({
-      pickupCity: 'Pune',
-      deliveryCity: 'Chennai',
-      vehicleType: 'hcv',
-      cargoDescription: 'Steel coils',
-      preferredPickupDate: '2099-12-25',
-    })
-    expect(transfer.state.step).toBe('idle')
+    expect(summary.quickReplies?.map((item) => item.label)).toEqual(['Continue on WhatsApp', 'Start over'])
   })
 
   it('prepares a WhatsApp message from the collected details', () => {

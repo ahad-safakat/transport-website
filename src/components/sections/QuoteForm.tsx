@@ -1,6 +1,6 @@
 import { useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { CheckCircle2, Loader2, MessageCircle, ShieldCheck } from 'lucide-react'
+import { CheckCircle2, MessageCircle, ShieldCheck } from 'lucide-react'
 import { enabledServices, hasWhatsApp, vehicleTypes } from '../../config/company'
 import { privacyNotice, quoteCopy } from '../../config/content'
 import { useQuotePrefill } from '../../context/quotePrefill'
@@ -361,20 +361,10 @@ export function QuoteForm() {
                 </div>
 
                 <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <Button type="submit" disabled={submitting} className="sm:min-w-52">
-                    {submitting ? (
-                      <>
-                        <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-                        Sending enquiry…
-                      </>
-                    ) : (
-                      'Submit enquiry'
-                    )}
-                  </Button>
                   {hasWhatsApp() ? (
                     <Button
                       type="button"
-                      variant={submit.status === 'error' && submit.whatsappFallback ? 'whatsapp' : 'ghost'}
+                      variant="whatsapp"
                       onClick={continueOnWhatsApp}
                       disabled={submitting}
                     >

@@ -1,5 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react'
-import { CheckCircle2, Handshake, Loader2, MessageCircle } from 'lucide-react'
+import { CheckCircle2, Handshake, MessageCircle } from 'lucide-react'
 import { hasWhatsApp, vehicleTypes } from '../../config/company'
 import { partnerCopy } from '../../config/content'
 import { fieldClass } from '../../lib/formStyles'
@@ -185,18 +185,8 @@ export function Partner() {
               ) : null}
             </div>
             <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-              <Button type="submit" disabled={status.state === 'submitting'}>
-                {status.state === 'submitting' ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-                    Sending…
-                  </>
-                ) : (
-                  'Send details'
-                )}
-              </Button>
               {hasWhatsApp() ? (
-                <Button variant={status.state === 'error' ? 'whatsapp' : 'ghost'} onClick={continueOnWhatsApp}>
+                <Button variant="whatsapp" onClick={continueOnWhatsApp}>
                   <MessageCircle size={16} aria-hidden="true" />
                   Send on WhatsApp
                 </Button>

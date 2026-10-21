@@ -99,7 +99,6 @@ function suggest(...topics: QuickReply[]): QuickReply[] {
 }
 
 const summaryReplies: QuickReply[] = [
-  { id: 'form', label: 'Continue to Quote Form' },
   { id: 'whatsapp-summary', label: 'Continue on WhatsApp' },
   { id: 'cancel', label: 'Start over' },
 ]
@@ -285,20 +284,12 @@ function handleQuoteFlow(state: ChatState, input: string, key: string): EngineRe
     }
 
     case 'quote-summary':
-      if (key.includes('form')) {
-        return {
-          state: createChatState(),
-          replies: ['I’ve copied these details into the quote form. Please review them and complete the remaining fields.'],
-          quickReplies: defaultQuickReplies,
-          transferToForm: state.draft,
-        }
-      }
       if (key.includes('whatsapp')) {
         return { ...whatsappReply(state, draftToWhatsApp(state.draft)), state: createChatState() }
       }
       return {
         state,
-        replies: ['Choose “Continue to Quote Form” or “Continue on WhatsApp”.'],
+        replies: ['Choose “Continue on WhatsApp” to send these details, or “Start over”.'],
         quickReplies: summaryReplies,
       }
 
