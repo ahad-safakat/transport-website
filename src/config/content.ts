@@ -154,18 +154,23 @@ export const videoCopy = {
   intro: 'A look at loading and linehaul operations — from the yard to the highway.',
   badge: 'Operations film',
   overlayTitle: 'Logistics, transport contractors & commission agents',
-  cta: 'Request a Quote',
+  tags: ['Full truckload', 'Intercity', 'Interstate'],
   src: '/videos/operations.mp4',
   poster: '/images/coverage-highway.jpg',
 }
 
+/** The three stages shown under the operations film. */
+export const videoHighlights = [
+  { title: 'At the yard', text: 'Goods are loaded and covered for the journey before the truck leaves.' },
+  { title: 'On the highway', text: 'Linehaul runs on the route agreed with you before movement begins.' },
+  { title: 'At delivery', text: 'Cargo is handed over at the agreed destination point.' },
+]
+
 export const galleryCopy = {
   eyebrow: 'Gallery',
   heading: 'TRUCKS, YARDS, AND THE ROAD.',
-  intro: 'A look at our vehicles and operations. Use the arrow to move through the photos.',
+  intro: 'A look at our vehicles, our office, and the routes we run. Use the arrow or tap a photo below.',
   badge: 'Photo gallery',
-  overlayTitle: 'Logistics, transport contractors & commission agents',
-  cta: 'Request a Quote',
   nextLabel: 'Show next photo',
 }
 

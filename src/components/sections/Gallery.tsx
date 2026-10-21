@@ -1,19 +1,19 @@
 import { useState } from 'react'
 import { useReducedMotion } from 'framer-motion'
-import { ArrowRight, ChevronRight, Truck } from 'lucide-react'
+import { Camera, ChevronRight } from 'lucide-react'
 import { galleryCopy, gallerySlides } from '../../config/content'
-import { useQuotePrefill } from '../../context/quotePrefill'
-import { Button } from '../ui/Button'
+import { MediaFrame } from '../ui/MediaFrame'
 import { Reveal } from '../ui/Reveal'
 import { SectionHeading } from '../ui/SectionHeading'
 
+const pad = (value: number) => String(value).padStart(2, '0')
+
 export function Gallery() {
-  const { requestQuote } = useQuotePrefill()
   const reduce = useReducedMotion()
   const [index, setIndex] = useState(0)
   const total = gallerySlides.length
   const slide = gallerySlides[index]
-  const counter = `${String(index + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`
+  const counter = `${pad(index + 1)} / ${pad(total)}`
 
   function next() {
     setIndex((current) => (current + 1) % total)
@@ -26,7 +26,8 @@ export function Gallery() {
           <SectionHeading eyebrow={galleryCopy.eyebrow} title={galleryCopy.heading} intro={galleryCopy.intro} />
         </Reveal>
 
-        <Reveal delay={0.08} className="mx-auto mt-12 max-w-4xl">
+        <Reveal delay={0.08} className="mx-auto mt-14 max-w-5xl">
+          <MediaFrame>
           <div className="relative overflow-hidden rounded-[1.75rem] bg-navy shadow-[0_40px_80px_-40px_rgba(10,10,10,0.7)] ring-1 ring-navy/10">
             <div className="relative aspect-[4/5] sm:aspect-[16/10]">
               {gallerySlides.map((item, itemIndex) => (
@@ -83,25 +84,58 @@ export function Gallery() {
             {/* Below the photo on phones so it stays visible; overlaid from sm up. */}
             <div className="relative z-10 -mt-4 px-3 pb-3 sm:absolute sm:inset-x-5 sm:bottom-5 sm:mt-0 sm:px-0 sm:pb-0">
               <div className="rounded-2xl bg-navy/88 p-5 text-white shadow-lift backdrop-blur-md sm:max-w-[calc(100%-4.5rem)] sm:p-6">
-                <p className="flex items-start gap-3 text-lg font-extrabold tracking-tight sm:text-2xl">
-                  <Truck size={22} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
-                  {galleryCopy.overlayTitle}
+                <p className="flex items-start gap-3 text-base font-extrabold tracking-tight sm:text-xl" aria-live="polite">
+                  <Camera size={20} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
+                  {slide.alt}
                 </p>
-                <p className="sr-only">{slide.alt}</p>
-                <Button
-                  className="mt-5"
-                  href="/#quote"
-                  onClick={(event) => {
-                    event.preventDefault()
-                    requestQuote()
-                  }}
-                >
-                  {galleryCopy.cta}
-                  <ArrowRight size={16} className="transition-transform group-hover/btn:translate-x-0.5" aria-hidden="true" />
-                </Button>
+                <div className="mt-4 flex gap-1.5 pl-8" aria-hidden="true">
+                  {gallerySlides.map((item, itemIndex) => (
+                    <span
+                      key={item.src}
+                      className={`h-1 flex-1 rounded-full ${reduce ? '' : 'transition-colors duration-300'} ${
+                        itemIndex <= index ? 'bg-accent' : 'bg-white/15'
+                      }`}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
+          </MediaFrame>
+        </Reveal>
+
+        <Reveal delay={0.14} className="mx-auto mt-10 max-w-5xl">
+          <ul className="grid grid-cols-7 gap-2 sm:gap-3" aria-label="Choose a photo">
+            {gallerySlides.map((item, itemIndex) => {
+              const active = itemIndex === index
+              return (
+                <li key={item.src}>
+                  <button
+                    type="button"
+                    onClick={() => setIndex(itemIndex)}
+                    aria-label={`Show photo ${itemIndex + 1}: ${item.alt}`}
+                    aria-current={active ? 'true' : undefined}
+                    className={`group relative block aspect-square w-full overflow-hidden rounded-lg bg-navy ring-offset-2 transition sm:aspect-[4/3] sm:rounded-xl ${
+                      active ? 'ring-2 ring-accent' : 'ring-1 ring-navy/10 hover:ring-navy/30'
+                    }`}
+                  >
+                    <img
+                      src={item.src}
+                      alt=""
+                      className={`h-full w-full object-cover transition ${
+                        active ? 'opacity-100' : 'opacity-55 group-hover:opacity-90'
+                      } ${reduce ? '' : 'duration-300 group-hover:scale-105'}`}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <span className="absolute bottom-1 left-1 hidden rounded bg-navy/75 px-1.5 py-0.5 text-[10px] font-bold text-white sm:block">
+                      {pad(itemIndex + 1)}
+                    </span>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
         </Reveal>
       </div>
     </section>

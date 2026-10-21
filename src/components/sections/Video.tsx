@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { ArrowRight, Pause, Play, Truck, Volume2, VolumeX } from 'lucide-react'
-import { videoCopy } from '../../config/content'
-import { useQuotePrefill } from '../../context/quotePrefill'
-import { Button } from '../ui/Button'
+import { PackageCheck, Pause, Play, Route, Truck, Volume2, VolumeX, Warehouse } from 'lucide-react'
+import { videoCopy, videoHighlights } from '../../config/content'
+import { MediaFrame } from '../ui/MediaFrame'
 import { Reveal } from '../ui/Reveal'
 import { SectionHeading } from '../ui/SectionHeading'
 
+const highlightIcons = [Warehouse, Route, PackageCheck]
+
 export function Video() {
   const videoRef = useRef<HTMLVideoElement>(null)
-  const { requestQuote } = useQuotePrefill()
   const [playing, setPlaying] = useState(false)
   const [muted, setMuted] = useState(true)
   const [missing, setMissing] = useState(false)
@@ -64,7 +64,8 @@ export function Video() {
           <SectionHeading eyebrow={videoCopy.eyebrow} title={videoCopy.heading} intro={videoCopy.intro} />
         </Reveal>
 
-        <Reveal delay={0.08} className="mx-auto mt-12 max-w-4xl">
+        <Reveal delay={0.08} className="mx-auto mt-14 max-w-5xl">
+          <MediaFrame>
           <div className="relative overflow-hidden rounded-[1.75rem] bg-navy shadow-[0_40px_80px_-40px_rgba(10,10,10,0.7)] ring-1 ring-navy/10">
             <div className="relative aspect-[4/5] sm:aspect-[16/10]">
               <video
@@ -123,21 +124,47 @@ export function Video() {
                   <Truck size={22} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
                   {videoCopy.overlayTitle}
                 </p>
-                <Button
-                  className="mt-5"
-                  href="/#quote"
-                  onClick={(event) => {
-                    event.preventDefault()
-                    requestQuote()
-                  }}
-                >
-                  {videoCopy.cta}
-                  <ArrowRight size={16} className="transition-transform group-hover/btn:translate-x-0.5" aria-hidden="true" />
-                </Button>
+                <ul className="mt-4 flex flex-wrap gap-2 pl-[34px]">
+                  {videoCopy.tags.map((tag) => (
+                    <li
+                      key={tag}
+                      className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-bold tracking-[0.12em] text-white/80 uppercase"
+                    >
+                      {tag}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </div>
+          </MediaFrame>
         </Reveal>
+
+        <ol className="mx-auto mt-14 grid max-w-5xl gap-4 sm:grid-cols-3 sm:gap-5">
+          {videoHighlights.map((item, index) => {
+            const Icon = highlightIcons[index]
+            return (
+              <Reveal
+                key={item.title}
+                as="li"
+                delay={0.1 + index * 0.06}
+                className="relative overflow-hidden border-t-2 border-accent bg-white p-6 shadow-[0_20px_40px_-30px_rgba(10,10,10,0.45)]"
+              >
+                <span
+                  className="pointer-events-none absolute -right-1 -bottom-5 text-7xl font-extrabold tracking-tighter text-navy/[0.05]"
+                  aria-hidden="true"
+                >
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+                <span className="flex h-11 w-11 items-center justify-center bg-navy text-accent" aria-hidden="true">
+                  <Icon size={20} />
+                </span>
+                <h3 className="mt-5 text-lg font-extrabold tracking-tight">{item.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate">{item.text}</p>
+              </Reveal>
+            )
+          })}
+        </ol>
       </div>
     </section>
   )
