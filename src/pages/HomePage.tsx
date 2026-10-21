@@ -1,6 +1,7 @@
 import { About } from '../components/sections/About'
 import { Contact } from '../components/sections/Contact'
 import { Coverage } from '../components/sections/Coverage'
+import { Gallery } from '../components/sections/Gallery'
 import { Hero } from '../components/sections/Hero'
 import { HowItWorks } from '../components/sections/HowItWorks'
 import { Industries } from '../components/sections/Industries'
@@ -18,6 +19,7 @@ export function HomePage() {
       <Hero />
       <About />
       <Video />
+      <Gallery />
       <Services />
       <Industries />
       <WhyChooseUs />

@@ -59,7 +59,7 @@ export const company = {
   phone: '+91 97415 19252',
   /** Every published number, shown in the contact section and footer. */
   phones: ['+91 97415 19252', '+91 97401 72952', '+91 97405 99252', '+91 89711 09252'],
-  email: 'ahadsafakat@gmail.com',
+  email: 'transporthindustann@gmail.com',
   instagramUrl: '',
   linkedinUrl: '',
   /** Production origin without trailing slash, e.g. https://www.example.com */

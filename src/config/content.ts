@@ -159,6 +159,26 @@ export const videoCopy = {
   poster: '/images/coverage-highway.jpg',
 }
 
+export const galleryCopy = {
+  eyebrow: 'Gallery',
+  heading: 'TRUCKS, YARDS, AND THE ROAD.',
+  intro: 'A look at our vehicles and operations. Use the arrow to move through the photos.',
+  badge: 'Photo gallery',
+  overlayTitle: 'Logistics, transport contractors & commission agents',
+  cta: 'Request a Quote',
+  nextLabel: 'Show next photo',
+}
+
+/** Drop files in public/images/gallery as 01.jpg, 02.jpg, and so on. Add a row here if you add a new file. */
+export const gallerySlides = [
+  { src: '/images/gallery/01.jpg', alt: 'Hindustan Transport truck on the highway' },
+  { src: '/images/gallery/02.jpg', alt: 'Covered goods truck on a mountain highway' },
+  { src: '/images/gallery/03.jpg', alt: 'Hindustan Transport truck at the yard' },
+  { src: '/images/gallery/04.jpg', alt: 'Loaded commercial truck prepared for movement' },
+  { src: '/images/gallery/05.jpg', alt: 'Trucks in convoy on an intercity route' },
+  { src: '/images/gallery/06.jpg', alt: 'Container truck on an interstate corridor' },
+]
+
 export const partnerCopy = {
   eyebrow: 'Vehicle owners & agents',
   heading: 'PARTNER WITH US.',
