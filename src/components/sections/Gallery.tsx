@@ -30,16 +30,29 @@ export function Gallery() {
           <div className="relative overflow-hidden rounded-[1.75rem] bg-navy shadow-[0_40px_80px_-40px_rgba(10,10,10,0.7)] ring-1 ring-navy/10">
             <div className="relative aspect-[4/5] sm:aspect-[16/10]">
               {gallerySlides.map((item, itemIndex) => (
-                <img
+                <div
                   key={item.src}
-                  src={item.src}
-                  alt={itemIndex === index ? item.alt : ''}
-                  className={`absolute inset-0 h-full w-full object-cover ${
-                    reduce ? '' : 'transition-opacity duration-500'
-                  } ${itemIndex === index ? 'opacity-100' : 'opacity-0'}`}
-                  loading={itemIndex === 0 ? 'eager' : 'lazy'}
-                  decoding="async"
-                />
+                  className={`absolute inset-0 ${reduce ? '' : 'transition-opacity duration-500'} ${
+                    itemIndex === index ? 'opacity-100' : 'opacity-0'
+                  }`}
+                  aria-hidden={itemIndex !== index}
+                >
+                  {/* Blurred fill so portrait photos show in full without empty bars. */}
+                  <img
+                    src={item.src}
+                    alt=""
+                    className="absolute inset-0 h-full w-full scale-110 object-cover blur-2xl brightness-75"
+                    loading={itemIndex === 0 ? 'eager' : 'lazy'}
+                    decoding="async"
+                  />
+                  <img
+                    src={item.src}
+                    alt={itemIndex === index ? item.alt : ''}
+                    className="absolute inset-0 h-full w-full object-contain"
+                    loading={itemIndex === 0 ? 'eager' : 'lazy'}
+                    decoding="async"
+                  />
+                </div>
               ))}
               <div
                 className="pointer-events-none absolute inset-0 bg-gradient-to-t from-navy via-navy/25 to-navy/10"

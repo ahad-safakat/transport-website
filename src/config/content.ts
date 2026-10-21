@@ -171,12 +171,13 @@ export const galleryCopy = {
 
 /** Drop files in public/images/gallery as 01.jpg, 02.jpg, and so on. Add a row here if you add a new file. */
 export const gallerySlides = [
-  { src: '/images/gallery/01.jpg', alt: 'Hindustan Transport truck on the highway' },
-  { src: '/images/gallery/02.jpg', alt: 'Covered goods truck on a mountain highway' },
-  { src: '/images/gallery/03.jpg', alt: 'Hindustan Transport truck at the yard' },
-  { src: '/images/gallery/04.jpg', alt: 'Loaded commercial truck prepared for movement' },
-  { src: '/images/gallery/05.jpg', alt: 'Trucks in convoy on an intercity route' },
-  { src: '/images/gallery/06.jpg', alt: 'Container truck on an interstate corridor' },
+  { src: '/images/gallery/01.jpg', alt: 'Three Hindustan Transport trucks in convoy on a village road' },
+  { src: '/images/gallery/02.jpg', alt: 'Hindustan Transport office at City Neralu Building, Hosabettu, Mangaluru' },
+  { src: '/images/gallery/03.jpg', alt: 'Loaded Hindustan Transport truck on a monsoon road' },
+  { src: '/images/gallery/04.jpg', alt: 'Hindustan Transport truck at a warehouse loading bay' },
+  { src: '/images/gallery/05.jpg', alt: 'Hindustan Transport truck carrying blue drums at the yard' },
+  { src: '/images/gallery/06.jpg', alt: 'Front view of the Hindustan Transport office signboard' },
+  { src: '/images/gallery/07.jpg', alt: 'Hindustan Transport truck with covered load, ready for an all-India trip' },
 ]
 
 export const partnerCopy = {
