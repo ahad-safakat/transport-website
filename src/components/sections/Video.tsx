@@ -114,25 +114,26 @@ export function Video() {
                   </ControlButton>
                 </div>
               </div>
+            </div>
 
-              <div className="absolute inset-x-3 bottom-3 z-10 sm:inset-x-5 sm:bottom-5">
-                <div className="rounded-2xl bg-navy/88 p-5 text-white shadow-lift backdrop-blur-md sm:p-6">
-                  <p className="flex items-start gap-3 text-lg font-extrabold tracking-tight sm:text-2xl">
-                    <Truck size={22} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
-                    {videoCopy.overlayTitle}
-                  </p>
-                  <Button
-                    className="mt-5"
-                    href="/#quote"
-                    onClick={(event) => {
-                      event.preventDefault()
-                      requestQuote()
-                    }}
-                  >
-                    {videoCopy.cta}
-                    <ArrowRight size={16} className="transition-transform group-hover/btn:translate-x-0.5" aria-hidden="true" />
-                  </Button>
-                </div>
+            {/* Below the video on phones so it stays visible; overlaid from sm up. */}
+            <div className="relative z-10 -mt-4 px-3 pb-3 sm:absolute sm:inset-x-5 sm:bottom-5 sm:mt-0 sm:px-0 sm:pb-0">
+              <div className="rounded-2xl bg-navy/88 p-5 text-white shadow-lift backdrop-blur-md sm:p-6">
+                <p className="flex items-start gap-3 text-lg font-extrabold tracking-tight sm:text-2xl">
+                  <Truck size={22} className="mt-0.5 shrink-0 text-accent" aria-hidden="true" />
+                  {videoCopy.overlayTitle}
+                </p>
+                <Button
+                  className="mt-5"
+                  href="/#quote"
+                  onClick={(event) => {
+                    event.preventDefault()
+                    requestQuote()
+                  }}
+                >
+                  {videoCopy.cta}
+                  <ArrowRight size={16} className="transition-transform group-hover/btn:translate-x-0.5" aria-hidden="true" />
+                </Button>
               </div>
             </div>
           </div>

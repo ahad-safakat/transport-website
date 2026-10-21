@@ -131,10 +131,12 @@ export function Navbar() {
         </div>
       </div>
       <div className={`container-site flex items-center justify-between gap-4 transition-[height] duration-300 ${scrolled ? 'h-16' : 'h-[76px]'}`}>
-        <Link to="/" className="flex min-w-0 items-center gap-3 text-white" aria-label={`${brandName} — home`}>
-          <img src={company.logoSrc} alt="" className="h-10 w-auto shrink-0 sm:h-11" width={87} height={44} />
+        <Link to="/" className="flex min-w-0 items-center gap-2 text-white sm:gap-3" aria-label={`${brandName} — home`}>
+          <img src={company.logoSrc} alt="" className="h-8 w-auto shrink-0 min-[400px]:h-10 sm:h-11" width={87} height={44} />
           <span className="flex min-w-0 flex-col">
-            <span className="truncate text-sm font-extrabold tracking-[0.14em] uppercase sm:text-[15px]">{brandName}</span>
+            <span className="truncate text-[13px] font-extrabold tracking-[0.06em] uppercase min-[400px]:text-sm min-[400px]:tracking-[0.1em] sm:text-[15px] sm:tracking-[0.14em]">
+              {brandName}
+            </span>
             {company.nameLocal ? (
               <span lang="kn" className="truncate text-[11px] leading-4 text-accent/90">
                 {company.nameLocal}
