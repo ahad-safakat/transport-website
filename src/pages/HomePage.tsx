@@ -7,6 +7,7 @@ import { Industries } from '../components/sections/Industries'
 import { Partner } from '../components/sections/Partner'
 import { QuoteForm } from '../components/sections/QuoteForm'
 import { Services } from '../components/sections/Services'
+import { Video } from '../components/sections/Video'
 import { WhyChooseUs } from '../components/sections/WhyChooseUs'
 import { Seo } from '../components/seo/Seo'
 
@@ -16,6 +17,7 @@ export function HomePage() {
       <Seo path="/" />
       <Hero />
       <About />
+      <Video />
       <Services />
       <Industries />
       <WhyChooseUs />

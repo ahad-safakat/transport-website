@@ -148,6 +148,17 @@ export const coverageCopy = {
   cta: 'Enquire about a route',
 }
 
+export const videoCopy = {
+  eyebrow: 'On the move',
+  heading: 'SEE HOW WE MOVE CARGO.',
+  intro: 'A look at loading and linehaul operations — from the yard to the highway.',
+  badge: 'Operations film',
+  overlayTitle: 'Logistics, transport contractors & commission agents',
+  cta: 'Request a Quote',
+  src: '/videos/operations.mp4',
+  poster: '/images/coverage-highway.jpg',
+}
+
 export const partnerCopy = {
   eyebrow: 'Vehicle owners & agents',
   heading: 'PARTNER WITH US.',
