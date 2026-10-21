@@ -1,5 +1,4 @@
 User-agent: *
 Allow: /
 
-# Replace the sitemap origin after the production domain is confirmed.
-Sitemap: /sitemap.xml
+Sitemap: https://hindustantransport.co.in/sitemap.xml

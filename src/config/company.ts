@@ -63,7 +63,7 @@ export const company = {
   instagramUrl: '',
   linkedinUrl: '',
   /** Production origin without trailing slash, e.g. https://www.example.com */
-  websiteDomain: '',
+  websiteDomain: 'https://hindustantransport.co.in',
   /** Official logo file in /public. */
   logoSrc: '/logo.png',
   faviconSrc: '/favicon.svg',
